@@ -1,0 +1,39 @@
+name: Build and Deploy Presentation
+
+on:
+  push:
+    branches:
+      - main # 當 main 分支有更新時觸發
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Build presentation with Marp
+        uses: marp-team/marp-cli-action@v2
+        with:
+          args: 'presentation.md --html -o public/index.html'
+        env:
+          MARP_USER: root:root
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v1
+        with:
+          path: 'public'
+
+  deploy:
+    needs: build
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v1
